@@ -124,7 +124,7 @@ class Client(object):
             logger.exception("error in _recv_loop")
         if partial:
             logger.warning("recv stream cut off mid-line, unused data: %r", partial)
-        self.stop(self)
+        self.stop()
 
     def _send_loop(self):
         try:
@@ -144,7 +144,7 @@ class Client(object):
                     self.stop()
         except Exception:
             logger.exception("error in _send_loop")
-        self.stop(self)
+        self.stop()
 
     def _process(self, line):
         logging.debug("Received message: %r", line)
