@@ -23,7 +23,7 @@ class Client(object):
 
     def __init__(self, hostname, nick, port=IRC_PORT,
                  local_hostname=None, server_name=None, real_name=None,
-                 disconnect_handler=[]):
+                 disconnect_handler=[], twitch=False, password=None):
         """Create a new IRC connection to given host and port.
         local_hostname, server_name and real_name are optional args
             that control how we report ourselves to the server
@@ -40,6 +40,9 @@ class Client(object):
         self.real_name = real_name or nick
         self.local_hostname = local_hostname or socket.gethostname()
         self.server_name = server_name or 'gevent-irc'
+
+        self.password = password
+        self.twitch = twitch
 
         self._recv_queue = gevent.queue.Queue()
         self._send_queue = gevent.queue.Queue()
@@ -97,11 +100,14 @@ class Client(object):
         self._socket.connect((self.hostname, self.port))
         self._group.spawn(self._send_loop)
         self._group.spawn(self._recv_loop)
+        if self.twitch:
+            self.send_message(message.Message('PASS', [self.password]))
         self.send_message(message.Nick(self.nick))
-        self.send_message(message.User(self.nick,
-                                       self.local_hostname,
-                                       self.server_name,
-                                       self.real_name))
+        if not self.twitch:
+            self.send_message(message.User(self.nick,
+                                           self.local_hostname,
+                                           self.server_name,
+                                           self.real_name))
 
     def _recv_loop(self):
         partial = ''
